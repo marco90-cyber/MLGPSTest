@@ -169,7 +169,7 @@ fun Cn0Chart(sats: List<GnssSat>, modifier: Modifier = Modifier) {
 
 /** Skyplot: centro = zenit, bordo esterno = orizzonte, nord in alto. */
 @Composable
-fun SkyPlot(sats: List<GnssSat>, modifier: Modifier = Modifier, detailed: Boolean = true) {
+fun SkyPlot(sats: List<GnssSat>, modifier: Modifier = Modifier, detailed: Boolean = true, heading: Float? = null) {
     val tm = rememberTextMeasurer()
     Canvas(modifier) {
         val cx = size.width / 2f
@@ -178,6 +178,7 @@ fun SkyPlot(sats: List<GnssSat>, modifier: Modifier = Modifier, detailed: Boolea
         val center = Offset(cx, cy)
         val line = Color(0x66FFFFFF)
         val dash = PathEffect.dashPathEffect(floatArrayOf(8f, 8f))
+        val h = heading ?: 0f
 
         drawCircle(PanelBg, radius, center)
         drawCircle(PanelText, radius, center, style = Stroke(if (detailed) 1.5.dp.toPx() else 1.dp.toPx()))
@@ -188,7 +189,7 @@ fun SkyPlot(sats: List<GnssSat>, modifier: Modifier = Modifier, detailed: Boolea
         }
         // raggi ogni 30°
         for (az in 0 until 360 step 30) {
-            val a = az * PI.toFloat() / 180f
+            val a = (az - h) * PI.toFloat() / 180f
             drawLine(
                 line, center,
                 Offset(cx + radius * sin(a), cy - radius * cos(a)),
@@ -200,7 +201,7 @@ fun SkyPlot(sats: List<GnssSat>, modifier: Modifier = Modifier, detailed: Boolea
             val tStyle = TextStyle(color = PanelText, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             val marks = listOf("N" to 0f, "E" to 90f, "S" to 180f, "O" to 270f)
             for ((txt, az) in marks) {
-                val a = az * PI.toFloat() / 180f
+                val a = (az - h) * PI.toFloat() / 180f
                 val layout = tm.measure(txt, tStyle)
                 val rr = radius - 14.dp.toPx()
                 drawText(
@@ -213,10 +214,21 @@ fun SkyPlot(sats: List<GnssSat>, modifier: Modifier = Modifier, detailed: Boolea
             }
         }
 
+        if (heading != null) {
+            val m = if (detailed) 1f else 0.6f
+            val tri = Path().apply {
+                moveTo(cx, cy - radius + 2.dp.toPx() * m)
+                lineTo(cx - 8.dp.toPx() * m, cy - radius - 12.dp.toPx() * m)
+                lineTo(cx + 8.dp.toPx() * m, cy - radius - 12.dp.toPx() * m)
+                close()
+            }
+            drawPath(tri, SnrYellow)
+        }
+
         val shapeR = if (detailed) 8.dp.toPx() else 3.dp.toPx()
         for (s in sats) {
             val rr = radius * (1f - s.elevation.coerceIn(0f, 90f) / 90f)
-            val a = s.azimuth * PI.toFloat() / 180f
+            val a = (s.azimuth - h) * PI.toFloat() / 180f
             val pos = Offset(cx + rr * sin(a), cy - rr * cos(a))
             val color = if (s.cn0 <= 0f) SnrRed else cn0Color(s.cn0)
             drawSatShape(s.constellation, pos, shapeR, color)

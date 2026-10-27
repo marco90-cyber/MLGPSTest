@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Public
@@ -72,6 +71,7 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
         val state by vm.gnss.collectAsStateWithLifecycle()
         val rec by vm.rec.collectAsStateWithLifecycle()
         val magHeading by rememberMagneticHeading()
+        val heading = trueHeading(magHeading, state.fix)
         val dark = isDarkFor(settings.themeMode)
 
         var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -115,7 +115,6 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
             TabItem("Stato", Icons.Filled.Dashboard),
             TabItem("Satelliti", Icons.AutoMirrored.Filled.List),
             TabItem("Cielo", Icons.Filled.Public),
-            TabItem("Bussola", Icons.Filled.Explore),
             TabItem("Log", Icons.Filled.FiberManualRecord),
         )
 
@@ -204,10 +203,9 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
                 }
                 Box(Modifier.weight(1f)) {
                     when (tab) {
-                        0 -> DashboardScreen(state, settings, magHeading) { tab = it }
+                        0 -> DashboardScreen(state, settings, heading) { tab = it }
                         1 -> SatellitesScreen(state, settings)
-                        2 -> SkyScreen(state)
-                        3 -> CompassScreen(state, settings, magHeading)
+                        2 -> SkyScreen(state, heading)
                         else -> LogScreen(
                             rec = rec,
                             initialFormats = vm.formats,

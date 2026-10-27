@@ -94,7 +94,7 @@ fun DashboardScreen(
                 colors = CardDefaults.cardColors(containerColor = PanelBg, contentColor = PanelText),
                 modifier = Modifier.weight(1f).aspectRatio(1f),
             ) {
-                SkyPlot(state.sats, Modifier.fillMaxSize().padding(4.dp), detailed = false)
+                SkyPlot(state.sats, Modifier.fillMaxSize().padding(4.dp), detailed = false, heading = heading)
             }
             Card(
                 onClick = { onNavigate(1) },
@@ -111,14 +111,14 @@ fun DashboardScreen(
                 }
             }
             Card(
-                onClick = { onNavigate(3) },
+                onClick = { onNavigate(2) },
                 colors = CardDefaults.cardColors(containerColor = PanelBg, contentColor = PanelText),
                 modifier = Modifier.weight(1f).aspectRatio(1f),
             ) {
                 CompassNeedle(heading, Modifier.fillMaxSize().padding(8.dp))
             }
             Card(
-                onClick = { onNavigate(3) },
+                onClick = { onNavigate(1) },
                 colors = tileColors,
                 modifier = Modifier.weight(1f).aspectRatio(1f),
             ) {

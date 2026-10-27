@@ -32,7 +32,7 @@ import com.marco90.mlgpstest.data.GnssState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SkyScreen(state: GnssState) {
+fun SkyScreen(state: GnssState, heading: Float?) {
     Column(
         Modifier
             .fillMaxSize()
@@ -55,7 +55,7 @@ fun SkyScreen(state: GnssState) {
                         Text("${state.inUse}", fontSize = 32.sp, fontWeight = FontWeight.Light)
                     }
                 }
-                SkyPlot(state.sats, Modifier.fillMaxWidth().aspectRatio(1f).padding(top = 8.dp), detailed = true)
+                SkyPlot(state.sats, Modifier.fillMaxWidth().aspectRatio(1f).padding(top = 8.dp), detailed = true, heading = heading)
             }
         }
 
@@ -82,7 +82,8 @@ fun SkyScreen(state: GnssState) {
                 }
                 Text(
                     "Colore = intensità del segnale: rosso < 10, arancione 10–20, giallo 20–30, " +
-                        "lime 30–50, verde > 50 dB-Hz. Cerchio bianco = usato nel calcolo della posizione.",
+                        "lime 30–50, verde > 50 dB-Hz. Cerchio bianco = usato nel calcolo della posizione. " +
+                        "Il cielo ruota con la bussola: il triangolo giallo indica dove punta il telefono.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
