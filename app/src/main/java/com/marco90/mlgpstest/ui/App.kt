@@ -14,7 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.SatelliteAlt
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
@@ -112,10 +115,10 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
         LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.stop() }
 
         val tabs = listOf(
-            TabItem("Stato", Icons.Filled.Dashboard),
-            TabItem("Satelliti", Icons.AutoMirrored.Filled.List),
-            TabItem("Cielo", Icons.Filled.Public),
-            TabItem("Log", Icons.Filled.FiberManualRecord),
+            TabItem("Stato", Icons.Filled.GpsFixed),
+            TabItem("Satelliti", Icons.Filled.SatelliteAlt),
+            TabItem("Cielo", Icons.Filled.Explore),
+            TabItem("Registro", Icons.Filled.Timeline),
         )
 
         Scaffold(
@@ -203,7 +206,7 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
                 }
                 Box(Modifier.weight(1f)) {
                     when (tab) {
-                        0 -> DashboardScreen(state, settings, heading) { tab = it }
+                        0 -> DashboardScreen(state)
                         1 -> SatellitesScreen(state, settings)
                         2 -> SkyScreen(state, heading)
                         else -> LogScreen(

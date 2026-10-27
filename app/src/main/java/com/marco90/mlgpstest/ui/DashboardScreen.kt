@@ -36,12 +36,7 @@ import com.marco90.mlgpstest.data.AppSettings
 import com.marco90.mlgpstest.data.GnssState
 
 @Composable
-fun DashboardScreen(
-    state: GnssState,
-    settings: AppSettings,
-    heading: Float?,
-    onNavigate: (Int) -> Unit,
-) {
+fun DashboardScreen(state: GnssState) {
     Column(
         Modifier
             .fillMaxSize()
@@ -81,80 +76,6 @@ fun DashboardScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             SnrBar(state.avgSnr, Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
-        }
-
-        // Riquadri rapidi
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val tileColors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            )
-            Card(
-                onClick = { onNavigate(2) },
-                colors = CardDefaults.cardColors(containerColor = PanelBg, contentColor = PanelText),
-                modifier = Modifier.weight(1f).aspectRatio(1f),
-            ) {
-                SkyPlot(state.sats, Modifier.fillMaxSize().padding(4.dp), detailed = false, heading = heading)
-            }
-            Card(
-                onClick = { onNavigate(1) },
-                colors = tileColors,
-                modifier = Modifier.weight(1f).aspectRatio(1f),
-            ) {
-                Column(
-                    Modifier.fillMaxSize().padding(4.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(Icons.Filled.GpsFixed, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Text("Posizione", fontSize = 11.sp, textAlign = TextAlign.Center)
-                }
-            }
-            Card(
-                onClick = { onNavigate(2) },
-                colors = CardDefaults.cardColors(containerColor = PanelBg, contentColor = PanelText),
-                modifier = Modifier.weight(1f).aspectRatio(1f),
-            ) {
-                CompassNeedle(heading, Modifier.fillMaxSize().padding(8.dp))
-            }
-            Card(
-                onClick = { onNavigate(1) },
-                colors = tileColors,
-                modifier = Modifier.weight(1f).aspectRatio(1f),
-            ) {
-                Column(
-                    Modifier.fillMaxSize().padding(4.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        fmtSpeedNumber(state.fix?.speed, settings.speedUnit),
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (state.hasFix) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    )
-                    Text(settings.speedUnit.label, fontSize = 11.sp)
-                }
-            }
-            Card(
-                onClick = { onNavigate(1) },
-                colors = tileColors,
-                modifier = Modifier.weight(1f).aspectRatio(1f),
-            ) {
-                Column(
-                    Modifier.fillMaxSize().padding(4.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        fmtTtff(state.ttffMs),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (state.ttffMs != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    )
-                    Text("1° fix", fontSize = 11.sp)
-                }
-            }
         }
     }
 }
