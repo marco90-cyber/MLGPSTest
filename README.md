@@ -23,3 +23,7 @@ Per firmare con la tua chiave (consigliato, così gli aggiornamenti si installan
 *Settings → Secrets and variables → Actions*: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
 
 Con Android Studio: apri la cartella e premi Run (serve JDK 17).
+
+## Aggiornamenti
+
+Dalle impostazioni dell app: *Aggiornamenti → Cerca aggiornamenti*. Scarica l ultima Release di GitHub e la installa.
