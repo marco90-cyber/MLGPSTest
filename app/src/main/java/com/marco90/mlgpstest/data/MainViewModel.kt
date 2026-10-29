@@ -2,6 +2,9 @@ package com.marco90.mlgpstest.data
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -12,6 +15,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val gnss: StateFlow<GnssState> = repo.state
     val rec: StateFlow<RecState> = recorder.state
+
+    val updater = Updater(app)
+    private val _update = MutableStateFlow<UpdateState>(UpdateState.Idle)
+    val update: StateFlow<UpdateState> = _update
+
+    fun checkUpdates() {
+        if (_update.value is UpdateState.Checking || _update.value is UpdateState.Downloading) return
+        _update.value = UpdateState.Checking
+        viewModelScope.launch { _update.value = updater.check() }
+    }
+
+    fun downloadUpdate() {
+        val a = _update.value as? UpdateState.Available ?: return
+        _update.value = UpdateState.Downloading(0f)
+        viewModelScope.launch {
+            _update.value = updater.download(a) { _update.value = UpdateState.Downloading(it) }
+        }
+    }
+
+    fun installUpdate() {
+        updater.install()
+    }
 
     /** Formati scelti per la registrazione. */
     var formats: Set<LogFormat> = setOf(LogFormat.GPX)

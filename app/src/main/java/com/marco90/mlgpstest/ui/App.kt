@@ -221,7 +221,18 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
             }
         }
 
-        if (showSettings) SettingsDialog(settings) { showSettings = false }
+        if (showSettings) {
+            val update by vm.update.collectAsStateWithLifecycle()
+            SettingsDialog(
+                settings = settings,
+                update = update,
+                versionName = vm.updater.currentVersionName(),
+                onCheckUpdate = { vm.checkUpdates() },
+                onDownloadUpdate = { vm.downloadUpdate() },
+                onInstallUpdate = { vm.installUpdate() },
+                onDismiss = { showSettings = false },
+            )
+        }
         if (showHelp) HelpDialog { showHelp = false }
         if (showAgps) {
             AgpsDialog(

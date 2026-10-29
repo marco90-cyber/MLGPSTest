@@ -6,10 +6,14 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -23,10 +27,19 @@ import com.marco90.mlgpstest.data.AppSettings
 import com.marco90.mlgpstest.data.CoordFormat
 import com.marco90.mlgpstest.data.SpeedUnit
 import com.marco90.mlgpstest.data.ThemeMode
+import com.marco90.mlgpstest.data.UpdateState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SettingsDialog(settings: AppSettings, onDismiss: () -> Unit) {
+fun SettingsDialog(
+    settings: AppSettings,
+    update: UpdateState,
+    versionName: String,
+    onCheckUpdate: () -> Unit,
+    onDownloadUpdate: () -> Unit,
+    onInstallUpdate: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = { TextButton(onClick = onDismiss) { Text("Chiudi") } },
@@ -91,6 +104,45 @@ fun SettingsDialog(settings: AppSettings, onDismiss: () -> Unit) {
                 ) {
                     Text("Schermo sempre acceso", Modifier.weight(1f))
                     Switch(checked = settings.keepScreenOn, onCheckedChange = { settings.updateKeepScreenOn(it) })
+                }
+
+                HorizontalDivider()
+                Text("Aggiornamenti", style = MaterialTheme.typography.titleSmall)
+                Text("Versione installata: $versionName", style = MaterialTheme.typography.bodyMedium)
+                when (update) {
+                    UpdateState.Idle -> {}
+                    UpdateState.Checking -> {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                            Text("Controllo in corso…")
+                        }
+                    }
+                    is UpdateState.UpToDate -> Text("Sei aggiornato all'ultima versione.", color = MaterialTheme.colorScheme.primary)
+                    is UpdateState.Available -> {
+                        Text("Disponibile: ${update.tag}" + if (update.sizeBytes > 0) " (${update.sizeBytes / 1024 / 1024 + 1} MB)" else "")
+                        if (update.notes.isNotBlank()) {
+                            Text(update.notes.trim(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    is UpdateState.Downloading -> {
+                        Text("Download in corso…")
+                        if (update.progress >= 0f) LinearProgressIndicator(progress = { update.progress }, modifier = Modifier.fillMaxWidth())
+                        else LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                    is UpdateState.Ready -> Text("${update.tag} scaricata, pronta da installare.")
+                    is UpdateState.Error -> Text(update.message, color = MaterialTheme.colorScheme.error)
+                }
+                when (update) {
+                    is UpdateState.Available -> FilledTonalButton(onClick = onDownloadUpdate, modifier = Modifier.fillMaxWidth()) {
+                        Text("Scarica aggiornamento")
+                    }
+                    is UpdateState.Ready -> FilledTonalButton(onClick = onInstallUpdate, modifier = Modifier.fillMaxWidth()) {
+                        Text("Installa")
+                    }
+                    is UpdateState.Checking, is UpdateState.Downloading -> {}
+                    else -> FilledTonalButton(onClick = onCheckUpdate, modifier = Modifier.fillMaxWidth()) {
+                        Text("Cerca aggiornamenti")
+                    }
                 }
             }
         },
