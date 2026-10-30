@@ -222,18 +222,20 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
         }
 
         if (showSettings) {
-            val update by vm.update.collectAsStateWithLifecycle()
+            val updCtx = androidx.compose.ui.platform.LocalContext.current
             SettingsDialog(
                 settings = settings,
-                update = update,
+                update = com.marco90.mlgpstest.data.UpdateState.Idle,
                 versionName = vm.updater.currentVersionName(),
-                onCheckUpdate = { vm.checkUpdates() },
+                // Finestra di aggiornamento con Pausa / Riprendi / Annulla
+                onCheckUpdate = { com.marco90.mlgpstest.AppUpdate.open(updCtx) },
                 onDownloadUpdate = { vm.downloadUpdate() },
                 onInstallUpdate = { vm.installUpdate() },
                 onDismiss = { showSettings = false },
             )
         }
         if (showHelp) HelpDialog { showHelp = false }
+        com.marco90.mlgpstest.AppUpdateHost()
         if (showAgps) {
             AgpsDialog(
                 onDismiss = { showAgps = false },
