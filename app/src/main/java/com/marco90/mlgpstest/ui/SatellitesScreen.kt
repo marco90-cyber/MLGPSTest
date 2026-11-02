@@ -23,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -127,7 +126,7 @@ fun SatellitesScreen(state: GnssState, settings: AppSettings) {
                                 }
                             }
                         }
-                        Switch(checked = onlyUsed, onCheckedChange = { onlyUsed = it })
+                        com.marco.mltheme.MLSwitch(checked = onlyUsed, onCheckedChange = { onlyUsed = it })
                     }
                     Text(
                         "Interruttore: solo satelliti in uso",

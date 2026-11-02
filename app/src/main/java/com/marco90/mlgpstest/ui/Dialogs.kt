@@ -16,20 +16,39 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import com.marco.mltheme.AccentPreview
+import com.marco.mltheme.MLChoiceRow
+import com.marco.mltheme.MLGroup
+import com.marco.mltheme.MLNavRow
+import com.marco.mltheme.MLSettingsScaffold
+import com.marco.mltheme.MLSwitchRow
+import com.marco.mltheme.MLThemeSettings
+import com.marco.mltheme.SWITCH_STYLES
+import com.marco.mltheme.SwitchStylePreview
+import com.marco.mltheme.THEME_MODES
+import com.marco.mltheme.ThemePreview
+import com.marco.mltheme.availableAccents
 import com.marco90.mlgpstest.data.AppSettings
 import com.marco90.mlgpstest.data.CoordFormat
 import com.marco90.mlgpstest.data.SpeedUnit
 import com.marco90.mlgpstest.data.ThemeMode
 import com.marco90.mlgpstest.data.UpdateState
 
-@OptIn(ExperimentalLayoutApi::class)
+/** Impostazioni a tutto schermo nello stile di MLauncher (MLTheme). */
 @Composable
 fun SettingsDialog(
     settings: AppSettings,
@@ -40,113 +59,69 @@ fun SettingsDialog(
     onInstallUpdate: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Chiudi") } },
-        title = { Text("Impostazioni") },
-        text = {
-            Column(
-                Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text("Tema", style = MaterialTheme.typography.titleSmall)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(
-                        ThemeMode.SYSTEM to "Sistema",
-                        ThemeMode.LIGHT to "Chiaro",
-                        ThemeMode.DARK to "Scuro",
-                    ).forEach { (m, label) ->
-                        FilterChip(
-                            selected = settings.themeMode == m,
-                            onClick = { settings.updateTheme(m) },
-                            label = { Text(label) },
-                        )
-                    }
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        MLSettingsScaffold("Impostazioni", onBack = onDismiss) {
+            val ml = MLThemeSettings.get(LocalContext.current)
+            MLGroup("Tema") {
+                MLChoiceRow("Tema", THEME_MODES, settings.themeMode.key, preview = { ThemePreview(it) }) { k ->
+                    settings.updateTheme(ThemeMode.values().first { it.key == k })
                 }
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text("Colori dinamici (Material You)", Modifier.weight(1f))
-                    Switch(checked = settings.dynamicColors, onCheckedChange = { settings.updateDynamicColors(it) })
+                MLChoiceRow("Colori", availableAccents, ml.accent, preview = { AccentPreview(it) }) { ml.accent = it }
+                MLChoiceRow("Stile degli interruttori", SWITCH_STYLES, ml.switchStyle, preview = { SwitchStylePreview(it) }) {
+                    ml.switchStyle = it
                 }
-
-                Text("Unità di velocità", style = MaterialTheme.typography.titleSmall)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SpeedUnit.values().forEach { u ->
-                        FilterChip(
-                            selected = settings.speedUnit == u,
-                            onClick = { settings.updateSpeedUnit(u) },
-                            label = { Text(u.label) },
-                        )
-                    }
+            }
+            MLGroup("Misure") {
+                MLChoiceRow("Unità di velocità", SpeedUnit.values().map { it.name to it.label }, settings.speedUnit.name) { k ->
+                    settings.updateSpeedUnit(SpeedUnit.valueOf(k))
                 }
-
-                Text("Formato coordinate", style = MaterialTheme.typography.titleSmall)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = settings.coordFormat == CoordFormat.DECIMAL,
-                        onClick = { settings.updateCoordFormat(CoordFormat.DECIMAL) },
-                        label = { Text("Gradi decimali") },
-                    )
-                    FilterChip(
-                        selected = settings.coordFormat == CoordFormat.DMS,
-                        onClick = { settings.updateCoordFormat(CoordFormat.DMS) },
-                        label = { Text("Gradi° min′ sec″") },
-                    )
+                MLChoiceRow(
+                    "Formato coordinate",
+                    listOf(CoordFormat.DECIMAL.name to "Gradi decimali", CoordFormat.DMS.name to "Gradi° min′ sec″"),
+                    settings.coordFormat.name,
+                ) { k -> settings.updateCoordFormat(CoordFormat.valueOf(k)) }
+            }
+            MLGroup("Schermo") {
+                MLSwitchRow("Schermo sempre acceso", "Non si spegne mentre l'app è aperta", settings.keepScreenOn) {
+                    settings.updateKeepScreenOn(it)
                 }
-
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text("Schermo sempre acceso", Modifier.weight(1f))
-                    Switch(checked = settings.keepScreenOn, onCheckedChange = { settings.updateKeepScreenOn(it) })
+            }
+            MLGroup("Aggiornamenti") {
+                val status = when (update) {
+                    UpdateState.Idle -> "Versione installata: $versionName"
+                    UpdateState.Checking -> "Controllo in corso…"
+                    is UpdateState.UpToDate -> "Sei aggiornato all'ultima versione ($versionName)"
+                    is UpdateState.Available -> "Disponibile: ${update.tag}" + if (update.sizeBytes > 0) " (${update.sizeBytes / 1024 / 1024 + 1} MB)" else ""
+                    is UpdateState.Downloading -> "Download in corso…"
+                    is UpdateState.Ready -> "${update.tag} scaricata, pronta da installare"
+                    is UpdateState.Error -> update.message
                 }
-
-                HorizontalDivider()
-                Text("Aggiornamenti", style = MaterialTheme.typography.titleSmall)
-                Text("Versione installata: $versionName", style = MaterialTheme.typography.bodyMedium)
                 when (update) {
-                    UpdateState.Idle -> {}
-                    UpdateState.Checking -> {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                            Text("Controllo in corso…")
-                        }
-                    }
-                    is UpdateState.UpToDate -> Text("Sei aggiornato all'ultima versione.", color = MaterialTheme.colorScheme.primary)
-                    is UpdateState.Available -> {
-                        Text("Disponibile: ${update.tag}" + if (update.sizeBytes > 0) " (${update.sizeBytes / 1024 / 1024 + 1} MB)" else "")
-                        if (update.notes.isNotBlank()) {
-                            Text(update.notes.trim(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                    is UpdateState.Downloading -> {
-                        Text("Download in corso…")
+                    is UpdateState.Available -> MLNavRow("Scarica aggiornamento", status, icon = Icons.Filled.Refresh, onClick = onDownloadUpdate)
+                    is UpdateState.Ready -> MLNavRow("Installa", status, icon = Icons.Filled.Refresh, onClick = onInstallUpdate)
+                    is UpdateState.Checking, is UpdateState.Downloading -> MLNavRow("Aggiornamenti", status, icon = Icons.Filled.Refresh, trailing = null) {}
+                    else -> MLNavRow("Cerca aggiornamenti", status, icon = Icons.Filled.Refresh, onClick = onCheckUpdate)
+                }
+                if (update is UpdateState.Downloading) {
+                    Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer).padding(16.dp)) {
                         if (update.progress >= 0f) LinearProgressIndicator(progress = { update.progress }, modifier = Modifier.fillMaxWidth())
                         else LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     }
-                    is UpdateState.Ready -> Text("${update.tag} scaricata, pronta da installare.")
-                    is UpdateState.Error -> Text(update.message, color = MaterialTheme.colorScheme.error)
                 }
-                when (update) {
-                    is UpdateState.Available -> FilledTonalButton(onClick = onDownloadUpdate, modifier = Modifier.fillMaxWidth()) {
-                        Text("Scarica aggiornamento")
-                    }
-                    is UpdateState.Ready -> FilledTonalButton(onClick = onInstallUpdate, modifier = Modifier.fillMaxWidth()) {
-                        Text("Installa")
-                    }
-                    is UpdateState.Checking, is UpdateState.Downloading -> {}
-                    else -> FilledTonalButton(onClick = onCheckUpdate, modifier = Modifier.fillMaxWidth()) {
-                        Text("Cerca aggiornamenti")
-                    }
+                if (update is UpdateState.Available && update.notes.isNotBlank()) {
+                    Text(
+                        update.notes.trim(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer).padding(16.dp),
+                    )
                 }
             }
-        },
-    )
+        }
+    }
 }
 
 @Composable

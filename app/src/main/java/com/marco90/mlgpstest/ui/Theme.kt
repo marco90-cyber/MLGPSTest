@@ -10,6 +10,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.marco.mltheme.MLTheme
 import com.marco90.mlgpstest.data.ThemeMode
 
 private val FallbackLight = lightColorScheme(
@@ -37,15 +38,16 @@ fun isDarkFor(mode: ThemeMode): Boolean = when (mode) {
     ThemeMode.DARK -> true
 }
 
+/** Tema delle MLapps (MLTheme): colori e stile degli interruttori scelti nelle impostazioni. */
 @Composable
-fun MLGPSTheme(mode: ThemeMode, dynamic: Boolean, content: @Composable () -> Unit) {
-    val dark = isDarkFor(mode)
-    val ctx = LocalContext.current
-    val scheme = when {
-        dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
-        dark -> FallbackDark
-        else -> FallbackLight
-    }
-    MaterialTheme(colorScheme = scheme, content = content)
+fun MLGPSTheme(mode: ThemeMode, @Suppress("UNUSED_PARAMETER") dynamic: Boolean, content: @Composable () -> Unit) {
+    MLTheme(mode = mode.key, content = content)
 }
+
+/** Chiave del tema per MLTheme. */
+val ThemeMode.key: String
+    get() = when (this) {
+        ThemeMode.SYSTEM -> "auto"
+        ThemeMode.LIGHT -> "light"
+        ThemeMode.DARK -> "dark"
+    }
