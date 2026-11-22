@@ -51,14 +51,13 @@ private enum class SortBy(val label: String) {
 @Composable
 fun SatellitesScreen(state: GnssState, settings: AppSettings) {
     var sortBy by remember { mutableStateOf(SortBy.CONSTELLATION) }
-    var onlyUsed by remember { mutableStateOf(false) }
     var hidden by remember { mutableStateOf(setOf<Int>()) }
     var sortMenu by remember { mutableStateOf(false) }
     var filterMenu by remember { mutableStateOf(false) }
 
     val present = state.sats.map { it.constellation }.distinct().sortedBy { Constellations.orderIndex(it) }
     val shown = state.sats
-        .filter { it.constellation !in hidden && (!onlyUsed || it.used) }
+        .filter { it.constellation !in hidden && it.used }
         .let { list ->
             when (sortBy) {
                 SortBy.CONSTELLATION -> list.sortedWith(
@@ -126,10 +125,9 @@ fun SatellitesScreen(state: GnssState, settings: AppSettings) {
                                 }
                             }
                         }
-                        com.marco.mltheme.MLSwitch(checked = onlyUsed, onCheckedChange = { onlyUsed = it })
                     }
                     Text(
-                        "Interruttore: solo satelliti in uso",
+                        "Solo satelliti in uso",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -139,7 +137,7 @@ fun SatellitesScreen(state: GnssState, settings: AppSettings) {
                     HorizontalDivider()
                     if (shown.isEmpty()) {
                         Text(
-                            "Nessun satellite da mostrare",
+                            "Nessun satellite in uso",
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.outline,
